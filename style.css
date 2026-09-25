@@ -1,0 +1,298 @@
+:root {
+  --feld: 60px;                 /* Größe eines Feldes */
+  --rosa-hell: #fde7ee;
+  --rosa: #f4b6c8;
+  --rosa-mittel: #d98aa5;
+  --rosa-dunkel: #b04a6f;
+  --pixelschrift: "Press Start 2P", monospace;
+}
+
+body {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+h1 {
+  font-family: var(--pixelschrift);
+  font-size: 28px;
+  color: #d6538a;
+  text-shadow: 3px 3px 0 var(--rosa);
+}
+
+/* Brett links, Tabelle rechts */
+#spiel {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 36px;
+  margin: 30px auto;
+}
+
+/* Brett plus Koordinaten drumherum */
+#brettrahmen {
+  display: grid;
+  grid-template-columns: 22px calc(var(--feld) * 8);
+  grid-template-rows: calc(var(--feld) * 8) 20px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+#reihen {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+#reihen span {
+  height: var(--feld);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--pixelschrift);
+  font-size: 10px;
+  color: var(--rosa-dunkel);
+}
+
+#dateien {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+}
+
+#dateien span {
+  width: var(--feld);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--pixelschrift);
+  font-size: 10px;
+  color: var(--rosa-dunkel);
+}
+
+#ecke {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+#brett {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(8, var(--feld));
+  grid-template-rows: repeat(8, var(--feld));
+  width: calc(var(--feld) * 8);
+}
+
+/* Pixelrahmen mit abgeschnittenen Ecken: zwei Ringe aus verschobenen Schatten */
+#brett,
+#zuege {
+  box-shadow:
+    0 -6px 0 0 var(--rosa-mittel), 0 6px 0 0 var(--rosa-mittel),
+    -6px 0 0 0 var(--rosa-mittel), 6px 0 0 0 var(--rosa-mittel),
+    0 -9px 0 0 var(--rosa-dunkel), 0 9px 0 0 var(--rosa-dunkel),
+    -9px 0 0 0 var(--rosa-dunkel), 9px 0 0 0 var(--rosa-dunkel);
+}
+
+.feld {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+  cursor: pointer;
+}
+
+/* Die Felder haben ein kleines Pixelmuster (wird in script.js gemalt) */
+.hell {
+  background-color: var(--rosa-hell);
+  background-image: var(--kachel-hell);
+  background-size: var(--feld) var(--feld);
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+.dunkel {
+  background-color: var(--rosa);
+  background-image: var(--kachel-dunkel);
+  background-size: var(--feld) var(--feld);
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* Figuren auf dem Brett */
+.figur {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ausgewaehlt {
+  outline: 4px solid #d63384;
+  outline-offset: -4px;
+}
+
+/* freies Zielfeld: kleines Quadrat in der Mitte */
+.ziel::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  background: rgba(214, 51, 132, 0.55);
+}
+
+/* gegnerische Figur, die geschlagen werden kann: Rahmen im Feld */
+.schlag {
+  box-shadow: inset 0 0 0 4px rgba(214, 51, 132, 0.6);
+}
+
+/* König im Schach */
+.imschach {
+  background: #ff6b81 !important;
+}
+
+/* Reihe mit den bereits geschlagenen Figuren */
+.geschlagen-reihe {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  min-height: 26px;
+  margin: 6px auto;
+  max-width: calc(var(--feld) * 8 + 22px);
+}
+
+.geschlagen-reihe img {
+  width: 22px;
+  height: 22px;
+  image-rendering: pixelated;
+}
+
+#status {
+  margin: 20px 0 0;
+  font-family: var(--pixelschrift);
+  font-size: 11px;
+  color: var(--rosa-dunkel);
+}
+
+/* Auswahl bei der Bauernumwandlung: normal versteckt, mit .aktiv sichtbar */
+#umwandlung {
+  display: none;
+  justify-content: center;
+  gap: 14px;
+  margin: 10px auto 0;
+}
+
+#umwandlung.aktiv {
+  display: flex;
+}
+
+.wahl {
+  width: var(--feld);
+  height: var(--feld);
+  padding: 0;
+  font-size: 40px;
+  cursor: pointer;
+  border: none;
+  background: var(--rosa);
+  box-shadow:
+    0 -3px 0 0 var(--rosa-mittel), 0 3px 0 0 var(--rosa-mittel),
+    -3px 0 0 0 var(--rosa-mittel), 3px 0 0 0 var(--rosa-mittel);
+}
+
+/* Steuerung für den Computergegner */
+#steuerung {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 18px auto 34px;
+  font-family: var(--pixelschrift);
+  font-size: 10px;
+  color: var(--rosa-dunkel);
+}
+
+#steuerung label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#steuerung select,
+#steuerung button {
+  font-family: var(--pixelschrift);
+  font-size: 10px;
+  color: var(--rosa-dunkel);
+  background: #ffffff;
+  border: none;
+  padding: 8px 10px;
+  cursor: pointer;
+  box-shadow:
+    0 -3px 0 0 var(--rosa-mittel), 0 3px 0 0 var(--rosa-mittel),
+    -3px 0 0 0 var(--rosa-mittel), 3px 0 0 0 var(--rosa-mittel);
+}
+
+/* Infozeile: was der Computer gerechnet hat */
+#computerinfo {
+  margin: 12px auto 0;
+  max-width: calc(var(--feld) * 8);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--rosa-dunkel);
+}
+
+/* Kasten mit den Zügen: gleiche Höhe wie das Brett */
+#zuege {
+  box-sizing: border-box;
+  width: 260px;
+  height: calc(var(--feld) * 8);
+  display: flex;
+  flex-direction: column;
+  background: var(--rosa-hell);
+  overflow: hidden;
+}
+
+#zuege h2 {
+  margin: 0;
+  padding: 14px 10px;
+  font-family: var(--pixelschrift);
+  font-size: 14px;
+  color: var(--rosa-dunkel);
+  background: var(--rosa);
+}
+
+/* nur dieser Teil scrollt, wenn die Partie länger wird */
+#zugscroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+#zuege table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+#zuege th {
+  position: sticky;
+  top: 0;
+  background: #f9d0de;
+  color: var(--rosa-dunkel);
+  padding: 6px;
+}
+
+#zuege td {
+  padding: 5px 6px;
+}
+
+#zuege tr:nth-child(even) td {
+  background: #fbd9e4;
+}
+
+#zuege td:first-child {
+  color: var(--rosa-dunkel);
+  width: 36px;
+}

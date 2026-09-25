@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1 data-i18n="title">Schach</h1>
+  <div id="steuerung">
+    <label><span data-i18n="gegner_label">Gegner</span>
+      <select id="gegner">
+        <option value="computer-schwarz" data-i18n="opt_computer_schwarz">Computer (ich bin Weiß)</option>
+        <option value="computer-weiss" data-i18n="opt_computer_weiss">Computer (ich bin Schwarz)</option>
+        <option value="zwei" data-i18n="opt_zwei">Zwei Spieler</option>
+      </select>
+    </label>
+    <label><span data-i18n="staerke_label">Stärke</span>
+      <select id="stufe">
+        <option value="1" data-i18n="stufe1">1 - Anfänger</option>
+        <option value="2" data-i18n="stufe2">2 - Mittel</option>
+        <option value="3" selected data-i18n="stufe3">3 - Stark</option>
+        <option value="4" data-i18n="stufe4">4 - Sehr stark (langsamer)</option>
+      </select>
+    </label>
+    <label><span data-i18n="sprache_label">Sprache</span>
+      <select id="sprache">
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+        <option value="bg">Български</option>
+      </select>
+    </label>
+    <button id="neuesSpiel" data-i18n="neues_spiel">Neues Spiel</button>
+  </div>
+  <div id="spiel">
+    <div id="brettbereich">
+      <div id="geschlagenOben" class="geschlagen-reihe"></div>
+      <div id="brettrahmen">
+        <div id="reihen"></div>
+        <div id="brett"></div>
+        <div id="ecke"></div>
+        <div id="dateien"></div>
+      </div>
+      <div id="geschlagenUnten" class="geschlagen-reihe"></div>
+      <div id="umwandlung"></div>
+      <p id="status"></p>
+      <p id="computerinfo"></p>
+    </div>
+    <div id="zuege">
+      <h2 data-i18n="zuege_ueberschrift">Züge</h2>
+      <div id="zugscroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="spalte_nr">Nr.</th>
+              <th data-i18n="weiss">Weiß</th>
+              <th data-i18n="schwarz">Schwarz</th>
+            </tr>
+          </thead>
+          <tbody id="zugliste"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script src="translations.js"></script>
+  <script src="script.js"></script>
+  <script src="computer.js"></script>
+  <script src="ende.js"></script>
+  <script src="katze.js"></script>
+  <script src="hintergrund.js"></script>
+</body>
+</html>
