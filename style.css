@@ -23,7 +23,7 @@ h1 {
 #spiel {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: stretch;
   flex-wrap: wrap;
   gap: 36px;
   margin: 30px auto;
@@ -32,8 +32,9 @@ h1 {
 /* Brett plus Koordinaten drumherum */
 #brettrahmen {
   display: grid;
-  grid-template-columns: 22px calc(var(--feld) * 8);
-  grid-template-rows: calc(var(--feld) * 8) 20px;
+  grid-template-columns: 26px calc(var(--feld) * 8);
+  grid-template-rows: calc(var(--feld) * 8) 28px;
+  column-gap: 12px;
   justify-content: center;
   margin: 0 auto;
 }
@@ -59,6 +60,8 @@ h1 {
   grid-column: 2;
   grid-row: 2;
   display: flex;
+  box-sizing: border-box;
+  padding-top: 10px;
 }
 
 #dateien span {
@@ -120,13 +123,29 @@ h1 {
   image-rendering: pixelated;
 }
 
-/* Figuren auf dem Brett */
+/* Figuren auf dem Brett (Unicode-Schachsymbole) */
 .figur {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  line-height: 1;
   pointer-events: none;
   user-select: none;
+}
+
+.figur-schwarz {
+  color: #2b1f26;
+}
+
+/* Weiß: weiße Füllung mit dunklem Umriss, damit man sie von Schwarz unterscheidet */
+.figur-weiss {
+  color: #ffffff;
+  text-shadow:
+    -1.5px -1.5px 0 #2b1f26,
+    1.5px -1.5px 0 #2b1f26,
+    -1.5px 1.5px 0 #2b1f26,
+    1.5px 1.5px 0 #2b1f26,
+    0 -1.5px 0 #2b1f26,
+    0 1.5px 0 #2b1f26,
+    -1.5px 0 0 #2b1f26,
+    1.5px 0 0 #2b1f26;
 }
 
 .ausgewaehlt {
@@ -163,10 +182,8 @@ h1 {
   max-width: calc(var(--feld) * 8 + 22px);
 }
 
-.geschlagen-reihe img {
-  width: 22px;
-  height: 22px;
-  image-rendering: pixelated;
+.geschlagen-reihe .figur {
+  font-size: 22px;
 }
 
 #status {
@@ -201,13 +218,116 @@ h1 {
     -3px 0 0 0 var(--rosa-mittel), 3px 0 0 0 var(--rosa-mittel);
 }
 
+/* Online-Lobby: normal versteckt, erscheint per .aktiv, wenn "Online" gewählt ist */
+#onlineBereich {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(var(--feld) * 8);
+  margin: 6px auto 24px;
+  padding: 14px 18px;
+  background: var(--rosa-hell);
+  box-shadow:
+    0 -3px 0 0 var(--rosa-mittel), 0 3px 0 0 var(--rosa-mittel),
+    -3px 0 0 0 var(--rosa-mittel), 3px 0 0 0 var(--rosa-mittel);
+}
+
+#onlineBereich.aktiv {
+  display: flex;
+}
+
+#onlineErstellen,
+#onlineBeitreten {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+#onlineZugangsdaten {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+#onlineZugangsdaten.aktiv {
+  display: flex;
+}
+
+.onlineLabel {
+  font-family: var(--pixelschrift);
+  font-size: 11px;
+  color: var(--rosa-dunkel);
+}
+
+#onlineCode {
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+#onlineLink,
+#onlineCodeEingabe {
+  font-family: sans-serif;
+  font-size: 13px;
+  color: var(--rosa-dunkel);
+  background: #ffffff;
+  border: none;
+  padding: 7px 9px;
+  box-shadow:
+    0 -2px 0 0 var(--rosa-mittel), 0 2px 0 0 var(--rosa-mittel),
+    -2px 0 0 0 var(--rosa-mittel), 2px 0 0 0 var(--rosa-mittel);
+}
+
+#onlineLink {
+  width: 220px;
+}
+
+#onlineCodeEingabe {
+  width: 100px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+#onlineErstellenKnopf,
+#onlineBeitretenKnopf,
+#onlineLinkKopieren {
+  font-family: var(--pixelschrift);
+  font-size: 10px;
+  color: #ffffff;
+  background: var(--rosa-dunkel);
+  border: none;
+  padding: 9px 12px;
+  cursor: pointer;
+  box-shadow:
+    0 -2px 0 0 var(--rosa-mittel), 0 2px 0 0 var(--rosa-mittel),
+    -2px 0 0 0 var(--rosa-mittel), 2px 0 0 0 var(--rosa-mittel);
+}
+
+#onlineErstellenKnopf:hover,
+#onlineBeitretenKnopf:hover,
+#onlineLinkKopieren:hover {
+  background: #c15c82;
+}
+
+#onlineStatus {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rosa-dunkel);
+}
+
 /* Steuerung für den Computergegner */
 #steuerung {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 18px;
+  column-gap: 24px;
+  row-gap: 14px;
   margin: 18px auto 34px;
   font-family: var(--pixelschrift);
   font-size: 10px;
@@ -220,18 +340,37 @@ h1 {
   gap: 8px;
 }
 
-#steuerung select,
-#steuerung button {
+#steuerung select {
   font-family: var(--pixelschrift);
   font-size: 10px;
   color: var(--rosa-dunkel);
   background: #ffffff;
   border: none;
   padding: 8px 10px;
+  min-width: 150px;
   cursor: pointer;
   box-shadow:
     0 -3px 0 0 var(--rosa-mittel), 0 3px 0 0 var(--rosa-mittel),
     -3px 0 0 0 var(--rosa-mittel), 3px 0 0 0 var(--rosa-mittel);
+}
+
+/* Startet die Partie neu: hebt sich als Hauptaktion farblich von den Auswahlfeldern ab */
+#neuesSpiel {
+  font-family: var(--pixelschrift);
+  font-size: 10px;
+  color: #ffffff;
+  background: var(--rosa-dunkel);
+  border: none;
+  padding: 10px 16px;
+  margin-left: 6px;
+  cursor: pointer;
+  box-shadow:
+    0 -3px 0 0 var(--rosa-mittel), 0 3px 0 0 var(--rosa-mittel),
+    -3px 0 0 0 var(--rosa-mittel), 3px 0 0 0 var(--rosa-mittel);
+}
+
+#neuesSpiel:hover {
+  background: #c15c82;
 }
 
 /* Infozeile: was der Computer gerechnet hat */
@@ -243,11 +382,10 @@ h1 {
   color: var(--rosa-dunkel);
 }
 
-/* Kasten mit den Zügen: gleiche Höhe wie das Brett */
+/* Kasten mit den Zügen: gleiche Höhe wie das Brett (per align-items:stretch in #spiel) */
 #zuege {
   box-sizing: border-box;
   width: 260px;
-  height: calc(var(--feld) * 8);
   display: flex;
   flex-direction: column;
   background: var(--rosa-hell);
@@ -256,9 +394,9 @@ h1 {
 
 #zuege h2 {
   margin: 0;
-  padding: 14px 10px;
+  padding: 10px 8px;
   font-family: var(--pixelschrift);
-  font-size: 14px;
+  font-size: 12px;
   color: var(--rosa-dunkel);
   background: var(--rosa);
 }
@@ -273,7 +411,7 @@ h1 {
 #zuege table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 15px;
+  font-size: 12px;
 }
 
 #zuege th {
@@ -281,11 +419,11 @@ h1 {
   top: 0;
   background: #f9d0de;
   color: var(--rosa-dunkel);
-  padding: 6px;
+  padding: 4px;
 }
 
 #zuege td {
-  padding: 5px 6px;
+  padding: 3px 4px;
 }
 
 #zuege tr:nth-child(even) td {
@@ -294,5 +432,5 @@ h1 {
 
 #zuege td:first-child {
   color: var(--rosa-dunkel);
-  width: 36px;
+  width: 26px;
 }

@@ -24,33 +24,96 @@ const stufeElement = document.getElementById("stufe");
 const neuesSpielElement = document.getElementById("neuesSpiel");
 const infoElement = document.getElementById("computerinfo");
 
+// Elemente der Online-Lobby
+const onlineBereichElement = document.getElementById("onlineBereich");
+const onlineErstellenKnopfElement = document.getElementById("onlineErstellenKnopf");
+const onlineZugangsdatenElement = document.getElementById("onlineZugangsdaten");
+const onlineCodeElement = document.getElementById("onlineCode");
+const onlineLinkElement = document.getElementById("onlineLink");
+const onlineLinkKopierenElement = document.getElementById("onlineLinkKopieren");
+const onlineCodeEingabeElement = document.getElementById("onlineCodeEingabe");
+const onlineBeitretenKnopfElement = document.getElementById("onlineBeitretenKnopf");
+const onlineStatusElement = document.getElementById("onlineStatus");
+
 // ---------- Figuren als Unicode-Schachsymbole ----------
 
+// Nur der "schwarze" Zeichensatz wird verwendet: die eigentlich für Weiß
+// vorgesehenen Unicode-Zeichen (U+2654-2659) werden von vielen Schriftarten
+// genauso ausgefüllt dargestellt wie die schwarzen - man sieht dann keinen
+// Unterschied. Stattdessen wird die Farbe selbst per CSS gesetzt
+// (.figur-weiss / .figur-schwarz), das funktioniert zuverlässig überall.
 const FIGURENSYMBOL = {
-  weiss: {
-    koenig: "\u2654",
-    dame: "\u2655",
-    turm: "\u2656",
-    laeufer: "\u2657",
-    springer: "\u2658",
-    bauer: "\u2659"
-  },
-  schwarz: {
-    koenig: "\u265A",
-    dame: "\u265B",
-    turm: "\u265C",
-    laeufer: "\u265D",
-    springer: "\u265E",
-    bauer: "\u265F"
-  }
+  koenig: "\u265A",
+  dame: "\u265B",
+  turm: "\u265C",
+  laeufer: "\u265D",
+  springer: "\u265E",
+  bauer: "\u265F"
 };
 
 function figurElement(farbe, art) {
   const span = document.createElement("span");
-  span.className = "figur";
-  span.textContent = FIGURENSYMBOL[farbe][art];
+  span.className = "figur " + (farbe === WEISS ? "figur-weiss" : "figur-schwarz");
+  span.textContent = FIGURENSYMBOL[art];
   return span;
 }
+
+// ---------- Pixel-Muster für die Felder ----------
+
+// Ein Punkt ist die Grundfarbe, s = etwas dunkler, h = etwas heller.
+const KACHEL_HELL = [
+  "............",
+  "..s.....h...",
+  "............",
+  "......s.....",
+  ".h..........",
+  "........s...",
+  "....h.......",
+  ".s..........",
+  "..........h.",
+  ".......s....",
+  "...h........",
+  "............"
+];
+
+const KACHEL_DUNKEL = [
+  "............",
+  "....s.......",
+  ".h..........",
+  "........h...",
+  "..s.........",
+  ".........s..",
+  "......h.....",
+  "s...........",
+  "....h.......",
+  ".........h..",
+  "..s.........",
+  "......s....."
+];
+
+function erstelleKachel(muster, farben) {
+  const leinwand = document.createElement("canvas");
+  leinwand.width = muster[0].length;
+  leinwand.height = muster.length;
+  const ctx = leinwand.getContext("2d");
+  ctx.fillStyle = farben["."];
+  ctx.fillRect(0, 0, leinwand.width, leinwand.height);
+  for (let y = 0; y < muster.length; y++) {
+    for (let x = 0; x < muster[y].length; x++) {
+      const zeichen = muster[y][x];
+      if (zeichen !== ".") {
+        ctx.fillStyle = farben[zeichen];
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+  return leinwand.toDataURL();
+}
+
+document.documentElement.style.setProperty("--kachel-hell",
+  "url(" + erstelleKachel(KACHEL_HELL, { ".": "#fde7ee", s: "#f9d6e2", h: "#fff3f7" }) + ")");
+document.documentElement.style.setProperty("--kachel-dunkel",
+  "url(" + erstelleKachel(KACHEL_DUNKEL, { ".": "#f4b6c8", s: "#ec9db5", h: "#f9cdda" }) + ")");
 
 // ---------- Brett und Startaufstellung ----------
 
@@ -555,6 +618,128 @@ function ziehe(zug) {
   }
 }
 
+// ---------- Online spielen (PeerJS: direkte Verbindung zwischen zwei Browsern) ----------
+
+let onlineAktiv = false;        // true, sobald man tatsächlich mit jemandem verbunden ist
+let onlineFarbe = null;         // eigene Farbe im Online-Spiel
+let onlinePeer = null;          // die eigene PeerJS-Instanz
+let onlineVerbindung = null;    // die Datenverbindung zum Mitspieler
+
+// Kurzer Code ohne leicht verwechselbare Zeichen (kein 0/O, kein 1/I)
+function zufallsCode() {
+  const zeichen = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 5; i++) {
+    code += zeichen[Math.floor(Math.random() * zeichen.length)];
+  }
+  return code;
+}
+
+// Legt eine neue PeerJS-Verbindung an und reicht sie an die Callback-Funktionen weiter
+function verbindungAufsetzen() {
+  onlineVerbindung.on("open", () => {
+    onlineAktiv = true;
+    onlineStatusElement.textContent = onlineFarbe === WEISS
+      ? "Verbunden! Du spielst Weiß."
+      : "Verbunden! Du spielst Schwarz.";
+    neuesSpiel();
+  });
+
+  onlineVerbindung.on("data", (nachricht) => {
+    if (nachricht.typ === "zug") {
+      wendeEntfernenZugAn(nachricht);
+    } else if (nachricht.typ === "neuesSpiel") {
+      neuesSpiel();
+    }
+  });
+
+  onlineVerbindung.on("close", () => {
+    onlineStatusElement.textContent = "Verbindung getrennt.";
+    onlineAktiv = false;
+  });
+}
+
+// Erstellt ein neues Online-Spiel: eigener Code, man selbst spielt Weiß
+function onlineSpielErstellen() {
+  const code = zufallsCode();
+  onlineFarbe = WEISS;
+  onlineStatusElement.textContent = "Lobby wird erstellt \u2026";
+  onlinePeer = new Peer("schach-" + code);
+
+  onlinePeer.on("open", () => {
+    onlineCodeElement.textContent = code;
+    const link = window.location.origin + window.location.pathname + "?spiel=" + code;
+    onlineLinkElement.value = link;
+    onlineZugangsdatenElement.classList.add("aktiv");
+    onlineStatusElement.textContent = "Warte auf Mitspieler \u2026 Code oder Link weitergeben.";
+  });
+
+  onlinePeer.on("connection", (verbindung) => {
+    onlineVerbindung = verbindung;
+    verbindungAufsetzen();
+  });
+
+  onlinePeer.on("error", (fehler) => {
+    onlineStatusElement.textContent = "Verbindungsfehler (" + fehler.type + ").";
+  });
+}
+
+// Tritt einem bestehenden Online-Spiel bei: man selbst spielt Schwarz
+function onlineSpielBeitreten(code) {
+  code = code.trim().toUpperCase();
+  if (code === "") {
+    return;
+  }
+  onlineFarbe = SCHWARZ;
+  onlineStatusElement.textContent = "Verbinde \u2026";
+  onlinePeer = new Peer();
+
+  onlinePeer.on("open", () => {
+    onlineVerbindung = onlinePeer.connect("schach-" + code);
+    verbindungAufsetzen();
+  });
+
+  onlinePeer.on("error", (fehler) => {
+    onlineStatusElement.textContent = "Verbindungsfehler (" + fehler.type + "). Stimmt der Code?";
+  });
+}
+
+// Schickt den eigenen Zug an den Mitspieler
+function sendeZug(zug, umwandlungsArt) {
+  if (onlineVerbindung === null || !onlineVerbindung.open) {
+    return;
+  }
+  onlineVerbindung.send({
+    typ: "zug",
+    von: zug.von,
+    nach: zug.nach,
+    enPassant: !!zug.enPassant,
+    rochade: !!zug.rochade,
+    umwandlung: umwandlungsArt || null
+  });
+}
+
+// Wendet einen vom Mitspieler erhaltenen Zug auf das eigene Brett an
+function wendeEntfernenZugAn(nachricht) {
+  const zug = {
+    von: nachricht.von,
+    nach: nachricht.nach,
+    enPassant: nachricht.enPassant,
+    rochade: nachricht.rochade
+  };
+  const farbeVorDemZug = amZug;
+  const text = zugText(zug, nachricht.umwandlung);
+  erfasseSchlagfigur(zug);
+  ziehe(zug);
+  if (nachricht.umwandlung) {
+    brett[zug.nach.zeile][zug.nach.spalte] = { farbe: farbeVorDemZug, art: nachricht.umwandlung };
+  }
+  ausgewaehlt = null;
+  amZug = amZug === WEISS ? SCHWARZ : WEISS;
+  protokolliere(text);
+  zeichneBrett();
+}
+
 // ---------- Computergegner (die Rechnerei steht in computer.js) ----------
 
 // Welche Farbe spielt der Computer? null = zwei Spieler
@@ -671,6 +856,7 @@ function neuesSpiel() {
 
 // Der Spieler hat eine Figur für die Umwandlung gewählt: Zug ausführen, Bauer ersetzen
 function waehleUmwandlung(art) {
+  const zugZumSenden = umwandlung;
   const bauer = brett[umwandlung.von.zeile][umwandlung.von.spalte];
   const text = zugText(umwandlung, art);
   erfasseSchlagfigur(umwandlung);
@@ -681,11 +867,18 @@ function waehleUmwandlung(art) {
   protokolliere(text);
   zeichneBrett();
   pruefeComputer();
+  if (onlineAktiv) {
+    sendeZug(zugZumSenden, art);
+  }
 }
 
 function klickAufFeld(zeile, spalte) {
   // Gesperrt: Spiel vorbei, Umwandlung wird gewählt oder der Computer ist dran
   if (spielVorbei || umwandlung !== null || computerDenkt || istComputerAmZug()) {
+    return;
+  }
+  // Im Online-Spiel: nur ziehen, wenn man selbst dran und verbunden ist
+  if (onlineAktiv && (amZug !== onlineFarbe || onlineVerbindung === null || !onlineVerbindung.open)) {
     return;
   }
   const figur = brett[zeile][spalte];
@@ -714,6 +907,9 @@ function klickAufFeld(zeile, spalte) {
       protokolliere(text);
       zeichneBrett();
       pruefeComputer();
+      if (onlineAktiv) {
+        sendeZug(zug, null);
+      }
       return;
     }
   }
@@ -757,7 +953,7 @@ function zeichneBrett() {
   spielVorbei = alleLegalenZuege(brett, amZug).length === 0;
 
   // Spielst du Schwarz, wird das Brett gedreht, sodass deine Figuren unten stehen
-  const gedreht = computerFarbe() === WEISS;
+  const gedreht = computerFarbe() === WEISS || (onlineAktiv && onlineFarbe === SCHWARZ);
   zeichneKoordinaten(gedreht);
 
   for (let i = 0; i < 8; i++) {
@@ -832,10 +1028,45 @@ function zeichneBrett() {
 
 // ---------- Steuerung ----------
 
+function onlinePanelAktualisieren() {
+  if (gegnerElement.value === "online") {
+    onlineBereichElement.classList.add("aktiv");
+  } else {
+    onlineBereichElement.classList.remove("aktiv");
+  }
+}
+
 gegnerElement.addEventListener("change", () => {
+  onlinePanelAktualisieren();
   zeichneBrett();
   pruefeComputer();
 });
-neuesSpielElement.addEventListener("click", neuesSpiel);
+
+neuesSpielElement.addEventListener("click", () => {
+  neuesSpiel();
+  if (onlineAktiv && onlineVerbindung !== null && onlineVerbindung.open) {
+    onlineVerbindung.send({ typ: "neuesSpiel" });
+  }
+});
+
+onlineErstellenKnopfElement.addEventListener("click", onlineSpielErstellen);
+
+onlineBeitretenKnopfElement.addEventListener("click", () => {
+  onlineSpielBeitreten(onlineCodeEingabeElement.value);
+});
+
+onlineLinkKopierenElement.addEventListener("click", () => {
+  onlineLinkElement.select();
+  navigator.clipboard.writeText(onlineLinkElement.value).catch(() => {});
+});
+
+// Wurde die Seite über einen geteilten Link geöffnet (?spiel=CODE)? Dann direkt beitreten.
+const geteilterCode = new URLSearchParams(window.location.search).get("spiel");
+if (geteilterCode) {
+  gegnerElement.value = "online";
+  onlinePanelAktualisieren();
+  onlineCodeEingabeElement.value = geteilterCode.toUpperCase();
+  onlineSpielBeitreten(geteilterCode);
+}
 
 zeichneBrett();

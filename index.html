@@ -17,6 +17,7 @@
         <option value="computer-schwarz" data-i18n="opt_computer_schwarz">Computer (ich bin Weiß)</option>
         <option value="computer-weiss" data-i18n="opt_computer_weiss">Computer (ich bin Schwarz)</option>
         <option value="zwei" data-i18n="opt_zwei">Zwei Spieler</option>
+        <option value="online">Online (mit Link/Code)</option>
       </select>
     </label>
     <label><span data-i18n="staerke_label">Stärke</span>
@@ -36,6 +37,24 @@
     </label>
     <button id="neuesSpiel" data-i18n="neues_spiel">Neues Spiel</button>
   </div>
+
+  <!-- Lobby fürs Online-Spielen: nur sichtbar, wenn oben "Online" ausgewählt ist -->
+  <div id="onlineBereich">
+    <div id="onlineErstellen">
+      <button id="onlineErstellenKnopf">Spiel erstellen</button>
+      <div id="onlineZugangsdaten">
+        <span class="onlineLabel">Code: <strong id="onlineCode"></strong></span>
+        <input type="text" id="onlineLink" readonly>
+        <button id="onlineLinkKopieren" type="button">Link kopieren</button>
+      </div>
+    </div>
+    <div id="onlineBeitreten">
+      <input type="text" id="onlineCodeEingabe" placeholder="Code eingeben" maxlength="5">
+      <button id="onlineBeitretenKnopf">Beitreten</button>
+    </div>
+    <p id="onlineStatus"></p>
+  </div>
+
   <div id="spiel">
     <div id="brettbereich">
       <div id="geschlagenOben" class="geschlagen-reihe"></div>
@@ -66,6 +85,8 @@
       </div>
     </div>
   </div>
+  <!-- PeerJS: baut die direkte Verbindung zwischen zwei Browsern auf (kein eigener Server nötig) -->
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="translations.js"></script>
   <script src="script.js"></script>
   <script src="computer.js"></script>
