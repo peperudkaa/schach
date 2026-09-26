@@ -43,12 +43,12 @@ const onlineStatusElement = document.getElementById("onlineStatus");
 // Unterschied. Stattdessen wird die Farbe selbst per CSS gesetzt
 // (.figur-weiss / .figur-schwarz), das funktioniert zuverlässig überall.
 const FIGURENSYMBOL = {
-  koenig: "\u265A",
-  dame: "\u265B",
-  turm: "\u265C",
-  laeufer: "\u265D",
-  springer: "\u265E",
-  bauer: "\u265F"
+  koenig: "\u265A\uFE0E",
+  dame: "\u265B\uFE0E",
+  turm: "\u265C\uFE0E",
+  laeufer: "\u265D\uFE0E",
+  springer: "\u265E\uFE0E",
+  bauer: "\u265F\uFE0E"
 };
 
 function figurElement(farbe, art) {
@@ -1057,7 +1057,15 @@ onlineBeitretenKnopfElement.addEventListener("click", () => {
 
 onlineLinkKopierenElement.addEventListener("click", () => {
   onlineLinkElement.select();
-  navigator.clipboard.writeText(onlineLinkElement.value).catch(() => {});
+  navigator.clipboard.writeText(onlineLinkElement.value)
+    .then(() => {
+      const urspruenglich = onlineLinkKopierenElement.textContent;
+      onlineLinkKopierenElement.textContent = "Kopiert!";
+      setTimeout(() => {
+        onlineLinkKopierenElement.textContent = urspruenglich;
+      }, 1500);
+    })
+    .catch(() => {});
 });
 
 // Wurde die Seite über einen geteilten Link geöffnet (?spiel=CODE)? Dann direkt beitreten.

@@ -10,6 +10,7 @@
 body {
   font-family: sans-serif;
   text-align: center;
+  overflow-x: hidden;
 }
 
 h1 {
@@ -102,7 +103,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 44px;
+  font-size: calc(var(--feld) * 0.73);
   cursor: pointer;
 }
 
@@ -209,7 +210,7 @@ h1 {
   width: var(--feld);
   height: var(--feld);
   padding: 0;
-  font-size: 40px;
+  font-size: calc(var(--feld) * 0.67);
   cursor: pointer;
   border: none;
   background: var(--rosa);
@@ -433,4 +434,82 @@ h1 {
 #zuege td:first-child {
   color: var(--rosa-dunkel);
   width: 26px;
+}
+
+/* ---------- Mobile / schmale Bildschirme ---------- */
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 22px;
+  }
+
+  :root {
+    --feld: 46px;
+  }
+
+  #steuerung {
+    flex-direction: column;
+    align-items: stretch;
+    row-gap: 12px;
+    margin: 14px 12px 22px;
+  }
+
+  #steuerung label {
+    justify-content: space-between;
+  }
+
+  #steuerung select {
+    min-width: 0;
+    flex: 1;
+  }
+
+  #neuesSpiel {
+    margin-left: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #onlineBereich {
+    width: calc(100% - 24px);
+    box-sizing: border-box;
+  }
+
+  #onlineErstellen,
+  #onlineBeitreten,
+  #onlineZugangsdaten.aktiv {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #onlineLink,
+  #onlineCodeEingabe {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #spiel {
+    gap: 22px;
+    margin: 18px auto;
+  }
+
+  #zuege {
+    width: calc(var(--feld) * 8);
+    height: auto;
+    max-height: calc(var(--feld) * 5);
+    align-self: auto;
+  }
+}
+
+@media (max-width: 430px) {
+  :root {
+    --feld: 38px;
+  }
+
+  h1 {
+    font-size: 18px;
+  }
+
+  #computerinfo {
+    font-size: 12px;
+  }
 }
